@@ -20,7 +20,6 @@ def process_command(command: str):
     elif command == "shutdown":
         aiy.audio.say("You have no power over me")
     elif command == "sudo shutdown" :
-        aiy.audio.say("Bye bye!")
         subprocess.call('sudo shutdown now', shell=True)
 
 def process_event(assistant, event):
@@ -33,6 +32,7 @@ def process_event(assistant, event):
 
     elif event.type == EventType.ON_RECOGNIZING_SPEECH_FINISHED and event.args :
         command = event.args["text"].lower()
+        assistant.stop_conversation()
         process_command(command)
 
     elif event.type == EventType.ON_END_OF_UTTERANCE:
