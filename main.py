@@ -1,6 +1,6 @@
 import platform
 import sys
-
+import RPi.GPIO as GPIO
 import aiy.assistant.auth_helpers
 from aiy.assistant.library import Assistant
 import aiy.voicehat
@@ -13,13 +13,16 @@ import subprocess
 # and is not entirely written by me. It is necessary to copy the code in order to use the Google Assistant API
 # with the raspberry pi hardware.
 
-def process_command(command: str):
+def process_command(command: str, assistant):
     command = command.lower()
     if command == "Ip address":
+        assistant.stop_conversation()
         aiy.audio.say(str(socket.gethostbyname(socket.gethostname())))
     elif command == "shutdown":
+        assistant.stop_conversation()
         aiy.audio.say("You have no power over me")
     elif command == "sudo shutdown" :
+        assistant.stop_conversation()
         subprocess.call('sudo shutdown now', shell=True)
 
 def process_event(assistant, event):
@@ -32,8 +35,7 @@ def process_event(assistant, event):
 
     elif event.type == EventType.ON_RECOGNIZING_SPEECH_FINISHED and event.args :
         command = event.args["text"].lower()
-        assistant.stop_conversation()
-        process_command(command)
+        process_command(command, assistant)
 
     elif event.type == EventType.ON_END_OF_UTTERANCE:
         status_ui.status('thinking')
@@ -47,6 +49,7 @@ def process_event(assistant, event):
         sys.exit(1)
 
 def main():
+    GPIO.setwarnings(False)
     credentials = aiy.assistant.auth_helpers.get_assistant_credentials()
     with Assistant(credentials) as assistant:
         for event in assistant.start():
